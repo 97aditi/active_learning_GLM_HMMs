@@ -1,0 +1,9 @@
+future
+numpy
+scipy
+matplotlib
+numba
+scikit-learn
+tqdm
+autograd
+seaborn
