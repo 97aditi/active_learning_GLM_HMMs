@@ -21,7 +21,6 @@ import ssm.emissions as emssn
 from ssm.util import one_hot, find_permutation
 from scipy.special import psi
 import scipy.stats as st
-
 import time
 __all__ = ['HMM', 'HSMM']
 
@@ -583,11 +582,9 @@ class HMM(object):
             # Obtain observation Likelihoods (TXKXC)
             log_likes = [self.observations.calculate_logits(inpt) for inpt in inputs]
             # Extract only emission potentials
-            # TODO: get rid of the loop
             log_Ls = [np.empty((T,self.K)) for T in Ts]
             for sess in range(len(Ts)):
-                 for t in range(Ts[sess]):
-                     log_Ls[sess][t,:] = log_likes[sess][t,:,int(datas[sess][t].ravel())]
+                log_Ls[sess] = log_likes[sess][np.arange(Ts[sess]),:,datas[sess].ravel()]
            
             zs = [self.samplestates(pi0, np.reshape(Ps, (1,K,K)), log_L) for log_L in log_Ls]
             #---------------------------------------------------------------------------------------  
@@ -612,8 +609,6 @@ class HMM(object):
               pbar.set_description("LP: {:.1f}".format(lls[-1]))
               pbar.refresh()
 
-            # Following works only for single-session data
-            time0 = time.time()
             # Finally, if we want to compute mutual information later for active learning, we want forward probabilities
             pzts = [self.posterior_over_states_using_past_samples(pi0, np.reshape(Ps, (1,K,K)), log_L) for log_L in log_Ls]
             # Since we are only doing a single session

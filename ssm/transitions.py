@@ -135,13 +135,14 @@ class StationaryTransitions(Transitions):
         """
         K = self.K
 
-        #TODO: lose the loop
+        # TODO: lose the loop
         # count of n_ij = \sum_t [z_t ==i, z_{t+1}==j]
         Ns = np.zeros((K,K), dtype='int')
         transitions = [list(zip(z, z[1:])) for z in zs]
         for transition in transitions:
             for pair in transition:
                 Ns[pair[0],pair[1]] = Ns[pair[0],pair[1]]+1
+        
         # sample from conditional of transitional prob
         # pi ~ Dir(alpha(i) + N)
         Ps = np.empty((K,K))
