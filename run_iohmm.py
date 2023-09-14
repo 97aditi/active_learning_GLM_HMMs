@@ -4,6 +4,13 @@ import numpy as np
 from iohmm_infomax import iohmm_infomax_gibbs, iohmm_infomax_VI
 from iohmm_random import iohmm_random_gibbs
 import argparse
+import multiprocessing as mp
+import os
+
+USE_CLUSTER = True
+
+# print cpu core count
+print("Number of cpu cores:", mp.cpu_count())
 
 # supressing warnings
 import warnings
@@ -21,10 +28,17 @@ parser.add_argument('--num_gibbs_burnin', type=int, default='100')
 
 args = parser.parse_args()
 
-# Fixing random seed
-#seed = int(os.environ["SLURM_ARRAY_TASK_ID"])
-seed = args.seed
-np.random.seed(seed)
+if USE_CLUSTER:
+    # Get number of gibbs samples
+    num_gibbs_samples = (int(os.environ["SLURM_ARRAY_TASK_ID"])+1)*50
+    seed = args.seed
+    np.random.seed(seed)
+    num_trials_per_sess = 1000
+else:
+    seed = args.seed
+    np.random.seed(seed)
+    num_gibbs_samples = args.num_gibbs_samples
+    num_trials_per_sess = 10
 
 # Set the parameters of the GLM-HMM
 num_states = 3   # number of discrete states
@@ -42,7 +56,6 @@ true_iohmm.transitions.params = gen_log_trans_mat
 gen_trans_mat = np.exp(gen_log_trans_mat)[0]
 
 num_sess = 1 # number of example sessions
-num_trials_per_sess = 1000 # number of trials in a session
 initial_trials = 100
 initial_inputs = np.ones((num_sess, initial_trials, input_dim)) # initialize inpts array
 stim_vals = np.arange(-5,5,step=0.01).tolist() # Stimuli values 
@@ -70,19 +83,19 @@ method = args.fitting_method
 # Train iohmm using active learning
 if  args.input_selection == 'infomax_gibbs':
     if method=='gibbs':
-        pi0_list, Ps_list, weights_list, post_cov, selected_inputs = iohmm_infomax_gibbs(seed, num_trials_per_sess, initial_inputs, num_states, true_iohmm, test_iohmm, stimuli_list, method = "gibbs", num_iters = args.num_gibbs_samples, burnin = args.num_gibbs_burnin)
+        pi0_list, Ps_list, weights_list, post_cov, selected_inputs = iohmm_infomax_gibbs(seed, num_trials_per_sess, initial_inputs, num_states, true_iohmm, test_iohmm, stimuli_list, method = "gibbs", num_iters = num_gibbs_samples, burnin = args.num_gibbs_burnin)
     elif method=='gibbs_PG':
        pi0_list, Ps_list, weights_list, post_cov, selected_inputs = iohmm_infomax_gibbs(seed, num_trials_per_sess, initial_inputs, num_states, true_iohmm, test_iohmm, stimuli_list, method = "gibbs", polyagamma=True)
     elif method=='gibbs_parallel':
         pi0_list, Ps_list, weights_list, post_cov, selected_inputs = iohmm_infomax_gibbs(seed, num_trials_per_sess, initial_inputs, num_states, true_iohmm, test_iohmm, stimuli_list, method = "gibbs_parallel")
     error_weights = np.linalg.norm(np.linalg.norm(weights_list-true_weights, axis=1), axis=1)
     error_Ps = np.linalg.norm(np.linalg.norm(Ps_list-gen_trans_mat, axis=1), axis=1)
-    np.save("Results_IOHMM/infomax_"+method+"_weights_atseed"+str(seed)+".npy", weights_list)
-    np.save("Results_IOHMM/infomax_"+method+"_errorinweights_atseed"+str(seed)+".npy", error_weights)
-    np.save("Results_IOHMM/infomax_"+method+"_Ps_atseed"+str(seed)+".npy", Ps_list)
-    np.save("Results_IOHMM/infomax_"+method+"_errorinPs_atseed"+str(seed)+".npy", error_Ps)
-    np.save("Results_IOHMM/infomax_"+method+"_posteriorcovariance_atseed"+str(seed)+".npy", post_cov)
-    np.save("Results_IOHMM/infomax_"+method+"_selectedinputs_atseed"+str(seed)+".npy", selected_inputs)
+    np.save("Results_IOHMM/infomax_"+method+"_weights_atseed"+str(seed)+"_gibbs_"+str(num_gibbs_samples)+".npy", weights_list)
+    np.save("Results_IOHMM/infomax_"+method+"_errorinweights_atseed"+str(seed)+"_gibbs_"+str(num_gibbs_samples)+".npy", error_weights)
+    np.save("Results_IOHMM/infomax_"+method+"_Ps_atseed"+str(seed)+"_gibbs_"+str(num_gibbs_samples)+".npy", Ps_list)
+    np.save("Results_IOHMM/infomax_"+method+"_errorinPs_atseed"+str(seed)+"_gibbs_"+str(num_gibbs_samples)+".npy", error_Ps)
+    np.save("Results_IOHMM/infomax_"+method+"_posteriorcovariance_atseed"+str(seed)+"_gibbs_"+str(num_gibbs_samples)+".npy", post_cov)
+    np.save("Results_IOHMM/infomax_"+method+"_selectedinputs_atseed"+str(seed)+"_gibbs_"+str(num_gibbs_samples)+".npy", selected_inputs)
 
 # Train iohmm using active learning
 if  args.input_selection == 'infomax_VI':
@@ -99,17 +112,17 @@ if  args.input_selection == 'infomax_VI':
 if args.input_selection == 'random':
 # Train iohmm using random sampling
     if method=='gibbs':
-        pi0_list, Ps_list, weights_list, post_cov, selected_inputs = iohmm_random_gibbs(seed, num_trials_per_sess, initial_inputs, num_states, true_iohmm, test_iohmm, stimuli_list, method = "gibbs", num_iters = args.num_gibbs_samples, burnin = args.num_gibbs_burnin)
+        pi0_list, Ps_list, weights_list, post_cov, selected_inputs = iohmm_random_gibbs(seed, num_trials_per_sess, initial_inputs, num_states, true_iohmm, test_iohmm, stimuli_list, method = "gibbs", num_iters = num_gibbs_samples, burnin = args.num_gibbs_burnin)
     elif method=='gibbs_PG':
        pi0_list, Ps_list, weights_list, post_cov, selected_inputs = iohmm_random_gibbs(seed, num_trials_per_sess, initial_inputs, num_states, true_iohmm, test_iohmm, stimuli_list, method = "gibbs", polyagamma=True)
     elif method=='gibbs_parallel':
         pi0_list, Ps_list, weights_list, post_cov, selected_inputs = iohmm_random_gibbs(seed, num_trials_per_sess, initial_inputs, num_states, true_iohmm, test_iohmm, stimuli_list, method = "gibbs_parallel")
     error_weights = np.linalg.norm(np.linalg.norm(weights_list-true_weights, axis=1), axis=1)
     error_Ps = np.linalg.norm(np.linalg.norm(Ps_list-gen_trans_mat, axis=1), axis=1)
-    np.save("Results_IOHMM/random_"+method+"_weights_atseed"+str(seed)+".npy", weights_list)
-    np.save("Results_IOHMM/random_"+method+"_errorinweights_atseed"+str(seed)+".npy", error_weights)
-    np.save("Results_IOHMM/random_"+method+"_Ps_atseed"+str(seed)+".npy", Ps_list)
-    np.save("Results_IOHMM/random_"+method+"_errorinPs_atseed"+str(seed)+".npy", error_Ps)
-    np.save("Results_IOHMM/random_"+method+"_posteriorcovariance_atseed"+str(seed)+".npy", post_cov)
-    np.save("Results_IOHMM/random_"+method+"_selectedinputs_atseed"+str(seed)+".npy", selected_inputs)
+    np.save("Results_IOHMM/random_"+method+"_weights_atseed"+str(seed)+"_gibbs_"+str(num_gibbs_samples)+".npy", weights_list)
+    np.save("Results_IOHMM/random_"+method+"_errorinweights_atseed"+str(seed)+"_gibbs_"+str(num_gibbs_samples)+".npy", error_weights)
+    np.save("Results_IOHMM/random_"+method+"_Ps_atseed"+str(seed)+"_gibbs_"+str(num_gibbs_samples)+".npy", Ps_list)
+    np.save("Results_IOHMM/random_"+method+"_errorinPs_atseed"+str(seed)+"_gibbs_"+str(num_gibbs_samples)+".npy", error_Ps)
+    np.save("Results_IOHMM/random_"+method+"_posteriorcovariance_atseed"+str(seed)+"_gibbs_"+str(num_gibbs_samples)+".npy", post_cov)
+    np.save("Results_IOHMM/random_"+method+"_selectedinputs_atseed"+str(seed)+"_gibbs_"+str(num_gibbs_samples)+".npy", selected_inputs)
 

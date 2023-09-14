@@ -19,6 +19,7 @@ from scipy import optimize
 from ssm.bernoulliglm import softplus, negloglike_bernoulliGLM, dnegL, HessnegL, neglogp_bernoulliGLM, expecteddnegL, expectedHessnegL
 import scipy.stats as st
 from pypolyagamma import logistic, PyPolyaGamma
+import time
 
 
 class Observations(object):
@@ -761,7 +762,7 @@ class InputDrivenObservations(Observations):
             negP = negL - st.multivariate_normal.logpdf(weights, mean=prior_w0, cov=prior_covariance)
             return (negP, dnegP(weights, datas, inputs))
 
-        Results = optimize.minimize(w_map, x0=weights, method='trust-exact', jac = True, hess = HessnegP, args = (datas, inputs))
+        Results = optimize.minimize(w_map, x0=weights.ravel(), method='trust-exact', jac = True, hess = HessnegP, args = (datas, inputs))
         weights_MAP = Results['x']
         # This might be the bottleneck, when increasing input dimensionality/ See if Lewi's idea applies here
         covariance = np.linalg.inv(HessnegP(weights_MAP, datas, inputs))
@@ -783,7 +784,6 @@ class InputDrivenObservations(Observations):
 
         unique, counts = np.unique(zs, return_counts=True)
         
-
         for k in range(self.K):
             # Gather all data points assigned to state k
             Yk = datas[zs == k]
@@ -795,11 +795,11 @@ class InputDrivenObservations(Observations):
             # Define proposal distribution Q; conditional on other parameters and data 
             weight_proposed, weight_mean, covariance = self.sampleposterior_bernoulliGLM(weight_old, Yk, Xk, k)
             # P(\theta^*_i \mid \theta_{-i}, D)
-            logp1 = - neglogp_bernoulliGLM(weight_proposed, Yk, Xk, self.prior_mean, self.prior_sigma)
+            logp1 = - neglogp_bernoulliGLM(weight_proposed, Yk, Xk, self.prior_mean, self.prior_sigma)[0]
             # Q(\theta^*_i \mid \theta_{-i}, D)
             logq1 = st.multivariate_normal.logpdf(weight_proposed, mean=weight_mean, cov=covariance)
             # P(\theta_i \mid \theta_{-i}, D)
-            logp2 = - neglogp_bernoulliGLM(weight_old, Yk, Xk, self.prior_mean, self.prior_sigma)
+            logp2 = - neglogp_bernoulliGLM(weight_old, Yk, Xk, self.prior_mean, self.prior_sigma)[0]
             # Q(\theta_i \mid \theta_{-i}, D)
             logq2 = st.multivariate_normal.logpdf(weight_old, mean=weight_mean, cov=covariance)
             # Compute acceptance probability

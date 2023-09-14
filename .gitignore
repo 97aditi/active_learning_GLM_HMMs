@@ -1,2 +1,5 @@
 pypolyagamma/
-
+slurm*
+*.out
+*.err
+*.sh
