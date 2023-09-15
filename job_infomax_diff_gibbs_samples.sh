@@ -6,10 +6,10 @@
 #SBATCH --ntasks=1               # total number of tasks across all nodes
 #SBATCH --mem-per-cpu=4G         # memory per cpu-core (4G is default)
 #SBATCH --time=10:10:00          # total run time limit (HH:MM:SS)
-#SBATCH --array=0-9              # job array with index values 0, 1, 2, 3, 4
+#SBATCH --array=0-49              # job array with index values 0, 1, 2, 3, 4
 #SBATCH --mail-type=end          # send email on job start, end and fault
 #SBATCH --mail-user=aditijha@princeton.edu
 
 module load anaconda3/2020.11
 conda activate al
-python run_iohmm.py 
+python run_iohmm.py --fitting_method gibbs_PG 

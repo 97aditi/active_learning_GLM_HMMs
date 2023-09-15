@@ -29,16 +29,18 @@ parser.add_argument('--num_gibbs_burnin', type=int, default='100')
 args = parser.parse_args()
 
 if USE_CLUSTER:
-    # Get number of gibbs samples
-    num_gibbs_samples = (int(os.environ["SLURM_ARRAY_TASK_ID"])+1)*50
-    seed = args.seed
+    # load cluster array
+    cluster_array = np.load('cluster_array.npy')
+    index = int(os.environ['SLURM_ARRAY_TASK_ID'])
+    seed = int(cluster_array[index][1])
     np.random.seed(seed)
+    num_gibbs_samples = int(cluster_array[index][0])
     num_trials_per_sess = 1000
 else:
     seed = args.seed
     np.random.seed(seed)
     num_gibbs_samples = args.num_gibbs_samples
-    num_trials_per_sess = 10
+    num_trials_per_sess = 100
 
 # Set the parameters of the GLM-HMM
 num_states = 3   # number of discrete states
@@ -85,7 +87,7 @@ if  args.input_selection == 'infomax_gibbs':
     if method=='gibbs':
         pi0_list, Ps_list, weights_list, post_cov, selected_inputs = iohmm_infomax_gibbs(seed, num_trials_per_sess, initial_inputs, num_states, true_iohmm, test_iohmm, stimuli_list, method = "gibbs", num_iters = num_gibbs_samples, burnin = args.num_gibbs_burnin)
     elif method=='gibbs_PG':
-       pi0_list, Ps_list, weights_list, post_cov, selected_inputs = iohmm_infomax_gibbs(seed, num_trials_per_sess, initial_inputs, num_states, true_iohmm, test_iohmm, stimuli_list, method = "gibbs", polyagamma=True)
+       pi0_list, Ps_list, weights_list, post_cov, selected_inputs = iohmm_infomax_gibbs(seed, num_trials_per_sess, initial_inputs, num_states, true_iohmm, test_iohmm, stimuli_list, method = "gibbs", polyagamma=True, num_iters = num_gibbs_samples, burnin = args.num_gibbs_burnin)
     elif method=='gibbs_parallel':
         pi0_list, Ps_list, weights_list, post_cov, selected_inputs = iohmm_infomax_gibbs(seed, num_trials_per_sess, initial_inputs, num_states, true_iohmm, test_iohmm, stimuli_list, method = "gibbs_parallel")
     error_weights = np.linalg.norm(np.linalg.norm(weights_list-true_weights, axis=1), axis=1)
@@ -114,7 +116,7 @@ if args.input_selection == 'random':
     if method=='gibbs':
         pi0_list, Ps_list, weights_list, post_cov, selected_inputs = iohmm_random_gibbs(seed, num_trials_per_sess, initial_inputs, num_states, true_iohmm, test_iohmm, stimuli_list, method = "gibbs", num_iters = num_gibbs_samples, burnin = args.num_gibbs_burnin)
     elif method=='gibbs_PG':
-       pi0_list, Ps_list, weights_list, post_cov, selected_inputs = iohmm_random_gibbs(seed, num_trials_per_sess, initial_inputs, num_states, true_iohmm, test_iohmm, stimuli_list, method = "gibbs", polyagamma=True)
+       pi0_list, Ps_list, weights_list, post_cov, selected_inputs = iohmm_random_gibbs(seed, num_trials_per_sess, initial_inputs, num_states, true_iohmm, test_iohmm, stimuli_list, method = "gibbs", polyagamma=True, num_iters = num_gibbs_samples, burnin = args.num_gibbs_burnin)
     elif method=='gibbs_parallel':
         pi0_list, Ps_list, weights_list, post_cov, selected_inputs = iohmm_random_gibbs(seed, num_trials_per_sess, initial_inputs, num_states, true_iohmm, test_iohmm, stimuli_list, method = "gibbs_parallel")
     error_weights = np.linalg.norm(np.linalg.norm(weights_list-true_weights, axis=1), axis=1)

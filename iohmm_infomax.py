@@ -65,11 +65,12 @@ def iohmm_infomax_gibbs(seed, T, initial_inputs, K, true_iohmm, test_iohmm, inpu
         print("Computing parameters of IO-HMM using "+str(t+1+init_time_bins)+" samples")
         # Select next input from a list of possible input input
         x_new, mi = input_selection(seed, test_iohmm, input_list, [pi0_sampled, Ps_sampled, obsparams_sampled], pzts_persample)
+        print("selected input: "+str(x_new))
         # Obtain output from the true model
         z_new, observation_new = true_iohmm.sample(T=1, input = np.reshape(np.array(x_new), (1,M)), prefix=(zs[0], observations[0]))
         # Append this to the list of inputs and outputs
         observations[0] = np.concatenate((observations[0], observation_new), axis=0)
-        inputs[0] = np.concatenate((inputs[0],np.reshape(np.array(x_new), (1,M))),  axis=0)
+        inputs[0] = np.concatenate((inputs[0],np.reshape(np.array(x_new), (1,M))),  axis=0).copy()
         zs[0] = np.concatenate((zs[0], z_new))
 
         # Run inference using the now new dataset
