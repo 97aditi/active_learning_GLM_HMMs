@@ -41,15 +41,16 @@ def input_selection(seed, hmm, stimuli, params_samples, pzts_persample):
     pz_samples = np.sum((pzts_persample[:,:,None]*Ps_samples), axis=1)
 
     # For every state, unravelling all w_j^Tx_t, this current implementation only works for Bernoulli GLM
-    wTx = np.empty((nsamp*nstim, K))
+    wTx = np.empty((nsamp, nstim, K))
     for k in range(K):
-        wTx[:,k] = np.ravel(weights_samples[:,k,:]@xgrid.T)
+        wTx[:,:, k] = weights_samples[:,k,:]@xgrid.T
+    wTx = np.reshape(wTx, (nsamp*nstim, K))
 
     # Compute Likelihood and marginal over y
     # Evaluate p(y_t|k, theta_j) for each time point (theta_j is the jth set of sampled parameters)
     p = np.empty((nsamp,nstim,nygrid, K))
     # Evaluate p(y_t|theta_j)
-    py_thetaj = 0
+    py_thetaj = np.zeros((nsamp, nstim, nygrid))
     for k in range(K):
         # Computing observation likelihoods first (can't this code be made generic for all observationss?)
         # log p(y_t = 1)
@@ -60,6 +61,8 @@ def input_selection(seed, hmm, stimuli, params_samples, pzts_persample):
         # CHECK THIS
         py_thetaj = py_thetaj + (pz_samples[:,k][:,None]*np.ones((nsamp, nstim)))[:,:,None]*p[:,:,:,k]
     
+    # sum of py_thetaj along axis 2 should be 1
+    assert np.allclose(np.sum(py_thetaj, axis=2), np.ones((nsamp,nstim))), "py_thetaj does not sum to 1"
     py = np.mean(np.reshape(py_thetaj, (nsamp, nstim, nygrid)), axis=0)
 
     # Compute entropy and conditional entropy
