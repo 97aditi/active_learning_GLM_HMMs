@@ -82,11 +82,12 @@ def iohmm_infomax_gibbs(seed, T, initial_inputs, K, true_iohmm, test_iohmm, inpu
         # Permute
         perm = find_permutation(zs[0], test_iohmm.most_likely_states(observations[0], input=inputs[0]), K, K)
         test_iohmm.permute(perm)
-        obsparams_sampled = obsparams_sampled[:,perm,:]
-        Ps_sampled = Ps_sampled[:,perm,:]
-        Ps_sampled = Ps_sampled[:,:,perm] 
-        pi0_sampled = pi0_sampled[:,perm] 
-        pzts_persample = pzts_persample[:,perm]  
+
+        obsparams_sampled = obsparams_sampled[:,perm,:].copy()       
+        Ps_sampled = Ps_sampled[:,perm,:].copy()
+        Ps_sampled = Ps_sampled[:,:,perm].copy()
+        pi0_sampled = pi0_sampled[:,perm].copy()
+        pzts_persample = pzts_persample[:,perm].copy() 
 
         # Store the model parameters
         obsparams_list[t+1] = np.mean(obsparams_sampled, axis=0)
