@@ -564,15 +564,11 @@ class HMM(object):
         zs = [npr.choice(self.K, size=T) for T in Ts]
 
         # Lists to store all samples and Log-likelihood
-        obsparams_sampled = np.zeros((num_iters+burnin+1,K, M))
-        Ps_sampled = np.zeros((num_iters+burnin+1,K, K))
-        pi0_sampled = np.empty((num_iters+burnin+1, K))
-        pzts_persample = np.empty((num_iters+burnin+1, K))
+        obsparams_sampled = np.zeros((num_iters+burnin,K, M))
+        Ps_sampled = np.zeros((num_iters+burnin,K, K))
+        pi0_sampled = np.empty((num_iters+burnin, K))
+        pzts_persample = np.empty((num_iters+burnin, K))
         lls = [self.log_probability(datas, inputs, masks, tags)]
-
-        obsparams_sampled[0] = np.reshape(obsparams, (K,M))
-        pi0_sampled[0] = pi0
-        Ps_sampled[0] = Ps
 
         pbar = ssm_pbar(burnin+num_iters, verbose, "LP: {:.1f}", [lls[-1]])
 
@@ -593,10 +589,10 @@ class HMM(object):
             # Sample from conditional of initial state distributions
             pi0 = self.init_state_distn.samplefromposterior(zs)
             # Sample from full conditional of observation weights
-            if polyagamma == False:
-                obsparams = self.observations.samplefromposterior(datas, inputs, zs)
-            else:
-                obsparams = self.observations.polyagammasample(datas, inputs, zs)
+            # if polyagamma == False:
+            obsparams = self.observations.samplefromposterior(datas, inputs, zs)
+            # else:
+            #     obsparams = self.observations.polyagammasample(datas, inputs, zs)
             #--------------------------------------------------------------------------------------
             
             # Storing progress
@@ -614,7 +610,7 @@ class HMM(object):
             # Since we are only doing a single session
             pzts_persample[it, :] = pzts[0]
 
-        return obsparams_sampled, Ps_sampled, pi0_sampled, lls, pzts_persample
+        return obsparams_sampled[burnin:], Ps_sampled[burnin:], pi0_sampled[burnin:], lls[burnin:], pzts_persample[burnin:]
 
 
     def _fit_gibbs_parallel(self, datas, inputs, zs, masks=None, tags=None, verbose = 2, num_iters=60, burnin=40, num_chains = 5, polyagamma=False,  **kwargs):
