@@ -4,12 +4,17 @@
 ### Dependencies and pacakges:
 
   - Code for IO-HMMs is built up on SSM (https://github.com/lindermanlab/ssm) toolbox; we added functions on top of the available repo.
-  Installation of this package requires running the following on terminal: ```pip install -e . '''
+  Installation of this package requires running the following on terminal: 
+  ```
+  pip install -e . 
+  ```
 
   - Packages required to run scripts in this repo are available in al.yaml.
 
-  - Note: For Gibbs sampling using polya-gamma augmentation, we used code from https://github.com/slinderman/pypolyagamma. It is part of al.yaml but can also be installed using 
-  ```pip install pypolyagamma'''
+  - Note: For Gibbs sampling using polya-gamma augmentation, we used code from https://github.com/slinderman/pypolyagamma. It is part of al.yaml but can also be installed using:
+  ```
+  pip install pypolyagamma
+  ```
 
 
 ### IOHMMs:
