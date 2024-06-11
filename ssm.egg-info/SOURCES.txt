@@ -1,3 +1,4 @@
+README.md
 setup.py
 ssm/__init__.py
 ssm/bernoulliglm.py

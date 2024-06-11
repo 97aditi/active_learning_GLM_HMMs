@@ -7,7 +7,7 @@ import argparse
 import multiprocessing as mp
 import os
 
-USE_CLUSTER = True
+USE_CLUSTER = False
 
 # print cpu core count
 print("Number of cpu cores:", mp.cpu_count())
@@ -21,7 +21,7 @@ parser.add_argument('--seed', type=int, default='1',
                     help='Enter random seed')
 parser.add_argument('--input_selection', type=str, default='infomax_gibbs',
                     help='choose one of infomax_gibbs/infomax_VI/random')
-parser.add_argument('--fitting_method', type=str, default='gibbs',
+parser.add_argument('--fitting_method', type=str, default='gibbs_PG',
                     help='choose one of gibbs/gibbs_parallel/gibbs_PG')     
 parser.add_argument('--num_gibbs_samples', type=int, default='400')
 parser.add_argument('--num_gibbs_burnin', type=int, default='100')

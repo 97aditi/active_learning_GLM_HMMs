@@ -5,3 +5,12 @@ Summary: Bayesian learning and inference for a variety of state space models
 Home-page: https://github.com/slinderman/ssm
 Author: Scott Linderman
 Author-email: scott.linderman@stanford.edu
+Requires-Dist: future
+Requires-Dist: numpy
+Requires-Dist: scipy
+Requires-Dist: matplotlib
+Requires-Dist: numba
+Requires-Dist: scikit-learn
+Requires-Dist: tqdm
+Requires-Dist: autograd
+Requires-Dist: seaborn
