@@ -1,4 +1,4 @@
-name: al
+name: al_glm_hmm
 channels:
   - defaults
 dependencies:
@@ -104,4 +104,5 @@ dependencies:
     - wcwidth==0.2.5
     - webencodings==0.5.1
     - widgetsnbextension==3.5.1
+    - pypolyagamma
 prefix: /Users/aditijha/opt/anaconda3/envs/al
